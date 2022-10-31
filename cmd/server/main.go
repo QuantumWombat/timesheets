@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"html"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -14,7 +15,10 @@ const (
 
 func main() {
 	rawPort := os.Getenv(portEnvVar)
-	port, ok := strconv.ParseInt(rawPort)
+	port, err := strconv.Atoi(rawPort)
+	if err != nil {
+		log.Fatalf("failed to parse port %s into num: %v", rawPort, err)
+	}
 	serverAddr := fmt.Sprintf(":%d", port)
 
 	mux := http.NewServeMux()
@@ -22,5 +26,8 @@ func main() {
 		fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
 	})
 
-	http.ListenAndServe(serverAddr, mux)
+	log.Printf("starting server at address %q\n", serverAddr)
+	if err := http.ListenAndServe(serverAddr, mux); err != nil {
+		log.Fatalf("listen and serve exited with non-nil err: %v", err)
+	}
 }
